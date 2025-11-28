@@ -1,0 +1,21 @@
+# Build and simulation outputs
+*.out
+*.o
+*.vvp
+*.vcd
+*.fst
+*.log
+*.bak
+*.swp
+*.swo
+
+# Verilator and other build dirs
+obj_dir/
+simv*
+build/
+out/
+waves/
+*.dSYM/
+
+# macOS files
+.DS_Store
