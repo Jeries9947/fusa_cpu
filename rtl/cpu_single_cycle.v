@@ -26,6 +26,7 @@ module cpu_single_cycle (
     wire [4:0] rd     = instr[15:11];
     wire [15:0] imm16 = instr[15:0];
     wire [25:0] jaddr = instr[25:0];
+    wire [5:0]  funct = instr[5:0];
 
     // Control signals
     wire       reg_write;
@@ -45,7 +46,7 @@ module cpu_single_cycle (
 
     control_unit u_ctrl (
         .opcode       (opcode),
-        .funct        (instr[5:0]),
+        .funct        (funct),
         .reg_write    (reg_write),
         .reg_dst      (reg_dst),
         .alu_src_imm  (alu_src_imm),
@@ -78,19 +79,17 @@ module cpu_single_cycle (
         .debug_reg3 (rf_debug_reg3)
     );
 
+    // Immediate (sign- or zero-extended, selected by imm_unsigned)
+    wire [31:0] imm_ext;
 
-    // Immediate
-    wire [31:0] imm_sext;
-    wire [31:0] imm_zext;
     sign_extend u_sext (
-        .imm     (imm16),
-        .imm_ext (imm_sext)
+        .imm         (imm16),
+        .imm_unsigned(imm_unsigned),
+        .imm_ext     (imm_ext)
     );
-    assign imm_zext = {16'b0, imm16};
 
-    wire [31:0] alu_b = alu_src_imm ?
-                        (imm_unsigned ? imm_zext : imm_sext) :
-                        rt_data;
+    // ALU second operand: rt_data or immediate
+    wire [31:0] alu_b = alu_src_imm ? imm_ext : rt_data;
 
     // ALU
     wire [31:0] alu_result;
@@ -119,7 +118,7 @@ module cpu_single_cycle (
     assign write_back_data = mem_to_reg ? mem_read_data : alu_result;
 
     // Branch and jump
-    wire [31:0] branch_offset = imm_sext << 2;
+    wire [31:0] branch_offset = imm_ext << 2;
     wire [31:0] branch_target = pc_plus4 + branch_offset;
     wire        take_branch   = (branch_eq & alu_zero) | (branch_ne & ~alu_zero);
 
@@ -141,6 +140,5 @@ module cpu_single_cycle (
     assign debug_pc   = pc;
     assign debug_reg3 = rf_debug_reg3;
     assign debug_mem0 = dmem_debug_mem0;
-
 
 endmodule
