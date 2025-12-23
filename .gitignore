@@ -19,3 +19,9 @@ waves/
 
 # macOS files
 .DS_Store
+
+# Local temp artifacts
+.tmp/
+*.vcd
+*.vvp
+*.out
