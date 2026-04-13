@@ -25,3 +25,7 @@ waves/
 *.vcd
 *.vvp
 *.out
+
+# Compiled simulation binaries
+cpu_tb
+lockstep_tb

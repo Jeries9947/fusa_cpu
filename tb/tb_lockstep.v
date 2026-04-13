@@ -32,14 +32,17 @@ module tb_lockstep;
 
     // Main stimulus + fault injection
     initial begin
-        $dumpfile("lockstep.vcd");
-        $dumpvars(0, tb_lockstep);
-
-        $display("TB start at time %t", $time);
+        
 
         reset = 1'b1;
         #20;
         reset = 1'b0;
+        
+        #1;
+        $dumpfile("lockstep.vcd");
+        $dumpvars(0, tb_lockstep);
+
+        $display("TB start at time %t", $time);
 
         // Let both cores run correctly for a few cycles
         repeat (10) begin
