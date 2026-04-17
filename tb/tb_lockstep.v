@@ -4,6 +4,7 @@
 module tb_lockstep;
     reg clk;
     reg reset;
+    reg fault_en;
 
     wire [31:0] pc0, pc1;
     wire [31:0] reg3_0, reg3_1;
@@ -14,6 +15,7 @@ module tb_lockstep;
     lockstep_top dut (
         .clk              (clk),
         .reset            (reset),
+        .fault_en         (fault_en),
         .pc0              (pc0),
         .pc1              (pc1),
         .reg3_0           (reg3_0),
@@ -27,46 +29,44 @@ module tb_lockstep;
     // Clock generation
     initial begin
         clk = 1'b0;
-        forever #5 clk = ~clk; // 100 MHz
+        forever #5 clk = ~clk;
     end
 
-    // Main stimulus + fault injection
+    // Main stimulus
     initial begin
-        
+        reset    = 1'b1;
+        fault_en = 1'b0;
 
-        reset = 1'b1;
         #20;
         reset = 1'b0;
-        
+
         #1;
         $dumpfile("lockstep.vcd");
         $dumpvars(0, tb_lockstep);
 
         $display("TB start at time %t", $time);
 
-        // Let both cores run correctly for a few cycles
+        // Run correctly for a few cycles
         repeat (10) begin
             @(posedge clk);
             $display("NO FI  t=%0t  PC0=%08h PC1=%08h  R3_0=%08h R3_1=%08h  M0_0=%08h M0_1=%08h  mismatch_now=%b latched=%b",
                      $time, pc0, pc1, reg3_0, reg3_1, mem0_0, mem0_1, mismatch_now, mismatch_latched);
         end
 
-        // Inject a fault at the observable output of core1 (reg3_1)
+        // Turn fault injection ON
         $display("=== Injecting fault into reg3_1 at time %t ===", $time);
-        force reg3_1 = 32'hDEAD_BEEF;
+        fault_en = 1'b1;
 
-        // Run a few more cycles to see comparator flag it
         repeat (10) begin
             @(posedge clk);
             $display("FI ON  t=%0t  PC0=%08h PC1=%08h  R3_0=%08h R3_1=%08h  M0_0=%08h M0_1=%08h  mismatch_now=%b latched=%b",
                      $time, pc0, pc1, reg3_0, reg3_1, mem0_0, mem0_1, mismatch_now, mismatch_latched);
         end
 
-        // Release the fault on the observable signal
-        release reg3_1;
+        // Turn fault injection OFF
+        fault_en = 1'b0;
         $display("=== Released fault at time %t ===", $time);
 
-        // Run a bit more to show the sticky flag stays 1
         repeat (10) begin
             @(posedge clk);
             $display("POST FI t=%0t  PC0=%08h PC1=%08h  R3_0=%08h R3_1=%08h  M0_0=%08h M0_1=%08h  mismatch_now=%b latched=%b",

@@ -12,7 +12,8 @@ CPU_RTL = $(RTL_DIR)/alu.v \
           $(RTL_DIR)/dmem.v \
           $(RTL_DIR)/imem.v \
           $(RTL_DIR)/register_file.v \
-          $(RTL_DIR)/sign_extend.v
+          $(RTL_DIR)/sign_extend.v \
+          $(RTL_DIR)/fault_inject.v
 
 LOCKSTEP_RTL = $(RTL_DIR)/lockstep_top.v
 

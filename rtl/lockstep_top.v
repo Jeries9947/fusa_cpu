@@ -2,6 +2,7 @@
 module lockstep_top (
     input  wire        clk,
     input  wire        reset,
+    input  wire        fault_en,
 
     output wire [31:0] pc0,
     output wire [31:0] pc1,
@@ -10,9 +11,15 @@ module lockstep_top (
     output wire [31:0] mem0_0,
     output wire [31:0] mem0_1,
 
-    output wire        mismatch_now,   // combinational compare
+    output wire        mismatch_now,    // combinational compare
     output reg         mismatch_latched // sticky error flag
 );
+
+    wire [31:0] reg3_1_raw;
+    wire [31:0] reg3_1_faulted;
+
+    assign reg3_1 = reg3_1_faulted;
+
     // Core 0 (master)
     cpu_single_cycle core0 (
         .clk        (clk),
@@ -27,8 +34,16 @@ module lockstep_top (
         .clk        (clk),
         .reset      (reset),
         .debug_pc   (pc1),
-        .debug_reg3 (reg3_1),
+        .debug_reg3 (reg3_1_raw),
         .debug_mem0 (mem0_1)
+    );
+
+    // Fault injection on checker reg3
+    fault_inject fi_reg3 (
+        .in_signal  (reg3_1_raw),
+        .fault_en   (fault_en),
+        .fault_value(32'hDEADBEEF),
+        .out_signal (reg3_1_faulted)
     );
 
     // Simple comparator - for now we compare:
@@ -36,8 +51,8 @@ module lockstep_top (
     // - reg3
     // - mem[0]
     assign mismatch_now =
-           (pc0    != pc1)   ||
-           (reg3_0 != reg3_1) ||
+           (pc0    != pc1)            ||
+           (reg3_0 != reg3_1_faulted) ||
            (mem0_0 != mem0_1);
 
     // Sticky flag that latches any mismatch
