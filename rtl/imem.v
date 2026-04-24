@@ -15,5 +15,5 @@ module imem (
     end
 
     assign instr = mem[addr[9:2]]; // word addressed
-
+    
 endmodule
