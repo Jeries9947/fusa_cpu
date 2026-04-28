@@ -12,10 +12,12 @@ CPU_RTL = $(RTL_DIR)/alu.v \
           $(RTL_DIR)/dmem.v \
           $(RTL_DIR)/imem.v \
           $(RTL_DIR)/register_file.v \
-          $(RTL_DIR)/sign_extend.v \
-          $(RTL_DIR)/fault_inject.v
+          $(RTL_DIR)/sign_extend.v
 
-LOCKSTEP_RTL = $(RTL_DIR)/lockstep_top.v
+LOCKSTEP_RTL = $(RTL_DIR)/fault_inject.v \
+               $(RTL_DIR)/comparator.v \
+               $(RTL_DIR)/watchdog.v \
+               $(RTL_DIR)/lockstep_top.v
 
 # ===== Outputs =====
 CPU_OUT      = cpu_sim.out

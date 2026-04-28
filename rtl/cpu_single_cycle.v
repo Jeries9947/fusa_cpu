@@ -2,9 +2,22 @@
 module cpu_single_cycle (
     input  wire clk,
     input  wire reset,
+
+    // Legacy debug taps (kept for waveform compatibility)
     output wire [31:0] debug_pc,
     output wire [31:0] debug_reg3,
-    output wire [31:0] debug_mem0
+    output wire [31:0] debug_mem0,
+
+    // Commit bus — architectural state written this cycle.
+    // Driven combinationally so the lockstep comparator can check
+    // both cores in the same clock phase.
+    output wire [31:0] commit_pc_next,   // next PC value
+    output wire        commit_reg_we,    // register file write enable
+    output wire [4:0]  commit_reg_addr,  // destination register
+    output wire [31:0] commit_reg_data,  // write-back data
+    output wire        commit_mem_we,    // data memory write enable
+    output wire [31:0] commit_mem_addr,  // memory address (ALU result)
+    output wire [31:0] commit_mem_data   // memory write data
 );
     // Program counter
     reg [31:0] pc;
@@ -136,9 +149,18 @@ module cpu_single_cycle (
             pc <= pc_next;
     end
 
-    // Simple debug taps (for now, only PC is meaningful)
+    // Legacy debug taps
     assign debug_pc   = pc;
     assign debug_reg3 = rf_debug_reg3;
     assign debug_mem0 = dmem_debug_mem0;
+
+    // Commit bus
+    assign commit_pc_next  = pc_next;
+    assign commit_reg_we   = reg_write;
+    assign commit_reg_addr = write_reg;
+    assign commit_reg_data = write_back_data;
+    assign commit_mem_we   = mem_write;
+    assign commit_mem_addr = alu_result;
+    assign commit_mem_data = rt_data;
 
 endmodule
