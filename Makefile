@@ -22,6 +22,7 @@ LOCKSTEP_RTL = $(RTL_DIR)/fault_inject.v \
 # ===== Outputs =====
 CPU_OUT      = cpu_sim.out
 LOCKSTEP_OUT = lockstep_sim.out
+CAMPAIGN_OUT = fault_campaign_sim.out
 
 # Default
 all: cpu lockstep
@@ -36,7 +37,12 @@ lockstep: $(CPU_RTL) $(LOCKSTEP_RTL) $(TB_DIR)/tb_lockstep.v
 	$(IVERILOG) -g2012 -o $(LOCKSTEP_OUT) $(CPU_RTL) $(LOCKSTEP_RTL) $(TB_DIR)/tb_lockstep.v
 	$(VVP) $(LOCKSTEP_OUT)
 
+# Fault injection campaign testbench
+fault_campaign: $(CPU_RTL) $(LOCKSTEP_RTL) $(TB_DIR)/tb_fault_campaign.v
+	$(IVERILOG) -g2012 -o $(CAMPAIGN_OUT) $(CPU_RTL) $(LOCKSTEP_RTL) $(TB_DIR)/tb_fault_campaign.v
+	$(VVP) $(CAMPAIGN_OUT)
+
 clean:
 	rm -f *.out *.vcd
 
-.PHONY: all cpu lockstep clean
+.PHONY: all cpu lockstep fault_campaign clean
