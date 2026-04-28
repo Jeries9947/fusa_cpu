@@ -1,12 +1,13 @@
-// alu.v
+// alu.sv
 module alu (
-    input  wire [31:0] a,
-    input  wire [31:0] b,
-    input  wire [3:0]  alu_ctrl,
-    output reg  [31:0] result,
-    output wire        zero
+    input  logic [31:0] a,
+    input  logic [31:0] b,
+    input  logic [3:0]  alu_ctrl,
+    output logic [31:0] result,
+    output logic        zero
 );
-    always @* begin
+
+    always_comb begin
         case (alu_ctrl)
             4'b0000: result = a + b;    // ADD
             4'b0001: result = a - b;    // SUB  (for BEQ/BNE compare)

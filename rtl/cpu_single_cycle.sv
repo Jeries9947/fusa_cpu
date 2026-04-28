@@ -1,61 +1,70 @@
-// cpu_single_cycle.v
+// cpu_single_cycle.sv
 module cpu_single_cycle (
-    input  wire clk,
-    input  wire reset,
+    input  logic clk,
+    input  logic reset,
 
     // Legacy debug taps (kept for waveform compatibility)
-    output wire [31:0] debug_pc,
-    output wire [31:0] debug_reg3,
-    output wire [31:0] debug_mem0,
+    output logic [31:0] debug_pc,
+    output logic [31:0] debug_reg3,
+    output logic [31:0] debug_mem0,
 
     // Commit bus — architectural state written this cycle.
     // Driven combinationally so the lockstep comparator can check
     // both cores in the same clock phase.
-    output wire [31:0] commit_pc_next,   // next PC value
-    output wire        commit_reg_we,    // register file write enable
-    output wire [4:0]  commit_reg_addr,  // destination register
-    output wire [31:0] commit_reg_data,  // write-back data
-    output wire        commit_mem_we,    // data memory write enable
-    output wire [31:0] commit_mem_addr,  // memory address (ALU result)
-    output wire [31:0] commit_mem_data   // memory write data
+    output logic [31:0] commit_pc_next,   // next PC value
+    output logic        commit_reg_we,    // register file write enable
+    output logic [4:0]  commit_reg_addr,  // destination register
+    output logic [31:0] commit_reg_data,  // write-back data
+    output logic        commit_mem_we,    // data memory write enable
+    output logic [31:0] commit_mem_addr,  // memory address (ALU result)
+    output logic [31:0] commit_mem_data   // memory write data
 );
+
     // Program counter
-    reg [31:0] pc;
-    wire [31:0] pc_next;
-    wire [31:0] pc_plus4;
+    logic [31:0] pc;
+    logic [31:0] pc_next;
+    logic [31:0] pc_plus4;
     assign pc_plus4 = pc + 32'd4;
 
     // Instruction fetch
-    wire [31:0] instr;
+    logic [31:0] instr;
     imem u_imem (
         .addr  (pc),
         .instr (instr)
     );
 
     // Decode fields
-    wire [5:0] opcode = instr[31:26];
-    wire [4:0] rs     = instr[25:21];
-    wire [4:0] rt     = instr[20:16];
-    wire [4:0] rd     = instr[15:11];
-    wire [15:0] imm16 = instr[15:0];
-    wire [25:0] jaddr = instr[25:0];
-    wire [5:0]  funct = instr[5:0];
+    logic [5:0]  opcode;
+    logic [4:0]  rs;
+    logic [4:0]  rt;
+    logic [4:0]  rd;
+    logic [15:0] imm16;
+    logic [25:0] jaddr;
+    logic [5:0]  funct;
+
+    assign opcode = instr[31:26];
+    assign rs     = instr[25:21];
+    assign rt     = instr[20:16];
+    assign rd     = instr[15:11];
+    assign imm16  = instr[15:0];
+    assign jaddr  = instr[25:0];
+    assign funct  = instr[5:0];
 
     // Control signals
-    wire       reg_write;
-    wire       reg_dst;
-    wire       alu_src_imm;
-    wire       imm_unsigned;
-    wire       mem_to_reg;
-    wire       mem_read;
-    wire       mem_write;
-    wire       branch_eq;
-    wire       branch_ne;
-    wire       jump;
-    wire [3:0] alu_ctrl;
-   
-    wire [31:0] rf_debug_reg3;
-    wire [31:0] dmem_debug_mem0;
+    logic        reg_write;
+    logic        reg_dst;
+    logic        alu_src_imm;
+    logic        imm_unsigned;
+    logic        mem_to_reg;
+    logic        mem_read;
+    logic        mem_write;
+    logic        branch_eq;
+    logic        branch_ne;
+    logic        jump;
+    logic [3:0]  alu_ctrl;
+
+    logic [31:0] rf_debug_reg3;
+    logic [31:0] dmem_debug_mem0;
 
     control_unit u_ctrl (
         .opcode       (opcode),
@@ -74,10 +83,12 @@ module cpu_single_cycle (
     );
 
     // Register file
-    wire [4:0]  write_reg = reg_dst ? rd : rt;
-    wire [31:0] rs_data;
-    wire [31:0] rt_data;
-    wire [31:0] write_back_data;
+    logic [4:0]  write_reg;
+    logic [31:0] rs_data;
+    logic [31:0] rt_data;
+    logic [31:0] write_back_data;
+
+    assign write_reg = reg_dst ? rd : rt;
 
     register_file u_rf (
         .clk        (clk),
@@ -93,7 +104,7 @@ module cpu_single_cycle (
     );
 
     // Immediate (sign- or zero-extended, selected by imm_unsigned)
-    wire [31:0] imm_ext;
+    logic [31:0] imm_ext;
 
     sign_extend u_sext (
         .imm         (imm16),
@@ -102,11 +113,12 @@ module cpu_single_cycle (
     );
 
     // ALU second operand: rt_data or immediate
-    wire [31:0] alu_b = alu_src_imm ? imm_ext : rt_data;
+    logic [31:0] alu_b;
+    assign alu_b = alu_src_imm ? imm_ext : rt_data;
 
     // ALU
-    wire [31:0] alu_result;
-    wire        alu_zero;
+    logic [31:0] alu_result;
+    logic        alu_zero;
     alu u_alu (
         .a        (rs_data),
         .b        (alu_b),
@@ -116,7 +128,7 @@ module cpu_single_cycle (
     );
 
     // Data memory
-    wire [31:0] mem_read_data;
+    logic [31:0] mem_read_data;
     dmem u_dmem (
         .clk        (clk),
         .mem_read   (mem_read),
@@ -131,18 +143,22 @@ module cpu_single_cycle (
     assign write_back_data = mem_to_reg ? mem_read_data : alu_result;
 
     // Branch and jump
-    wire [31:0] branch_offset = imm_ext << 2;
-    wire [31:0] branch_target = pc_plus4 + branch_offset;
-    wire        take_branch   = (branch_eq & alu_zero) | (branch_ne & ~alu_zero);
+    logic [31:0] branch_offset;
+    logic [31:0] branch_target;
+    logic        take_branch;
+    logic [31:0] jump_target;
 
-    wire [31:0] jump_target = {pc_plus4[31:28], jaddr, 2'b00};
+    assign branch_offset = imm_ext << 2;
+    assign branch_target = pc_plus4 + branch_offset;
+    assign take_branch   = (branch_eq & alu_zero) | (branch_ne & ~alu_zero);
+    assign jump_target   = {pc_plus4[31:28], jaddr, 2'b00};
 
-    assign pc_next = jump        ? jump_target :
+    assign pc_next = jump        ? jump_target  :
                      take_branch ? branch_target :
                                    pc_plus4;
 
     // PC update
-    always @(posedge clk) begin
+    always_ff @(posedge clk) begin
         if (reset)
             pc <= 32'b0;
         else

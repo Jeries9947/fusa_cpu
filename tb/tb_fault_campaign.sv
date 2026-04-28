@@ -1,14 +1,14 @@
-// tb_fault_campaign.v
+// tb_fault_campaign.sv
 // Automated fault-injection campaign for the FuSa lockstep CPU.
 //
-// IMEM program (from imem.v, runs once then self-loops at beq):
+// IMEM program (from imem.sv, runs once then self-loops at beq):
 //   PC= 0  addi $1,$0, 5    reg1=5
 //   PC= 4  addi $2,$0,10    reg2=10
 //   PC= 8  add  $3,$1,$2    reg3=15  ← injection window used by most tests
 //   PC=12  sw   $3, 0($0)   mem[0]=15
 //   PC=16  beq  $0,$0,-1    loops to PC=16 forever
 //
-// After reset the comparator's do_reset task leaves the CPU at PC=8,
+// After reset the do_reset task leaves the CPU at PC=8,
 // mid-execution of the add instruction, where all commit-bus fields
 // carry meaningful non-zero values. Faults are injected there.
 //
@@ -34,34 +34,34 @@ module tb_fault_campaign;
     // ------------------------------------------------------------------ //
     //  Parameters
     // ------------------------------------------------------------------ //
-    parameter CLK_HALF   = 5;    // 10 ns period = 100 MHz
-    parameter RST_CYCLES = 4;    // reset assertion duration (posedges)
-    parameter MAX_WAIT   = 20;   // max posedges to wait for detection
+    parameter int CLK_HALF   = 5;    // 10 ns period = 100 MHz
+    parameter int RST_CYCLES = 4;    // reset assertion duration (posedges)
+    parameter int MAX_WAIT   = 20;   // max posedges to wait for detection
 
     // ------------------------------------------------------------------ //
     //  DUT signals
     // ------------------------------------------------------------------ //
-    reg         clk;
-    reg         reset;
-    reg         fault_en;
-    reg  [1:0]  fault_sel;
-    reg  [31:0] fault_mask;
-    reg         clear_latch;
+    logic        clk;
+    logic        reset;
+    logic        fault_en;
+    logic [1:0]  fault_sel;
+    logic [31:0] fault_mask;
+    logic        clear_latch;
 
-    wire [31:0] pc0, pc1;
-    wire [31:0] reg3_0, reg3_1;
-    wire [31:0] mem0_0, mem0_1;
-    wire [31:0] a_pc_next,  b_pc_next;
-    wire        a_reg_we,   b_reg_we;
-    wire [4:0]  a_reg_addr, b_reg_addr;
-    wire [31:0] a_reg_data, b_reg_data;
-    wire        a_mem_we,   b_mem_we;
-    wire [31:0] a_mem_addr, b_mem_addr;
-    wire [31:0] a_mem_data, b_mem_data;
-    wire        mismatch_now;
-    wire        mismatch_latched;
-    wire [6:0]  mismatch_field;
-    wire        stall_a, stall_b, stall_any, stall_latched;
+    logic [31:0] pc0, pc1;
+    logic [31:0] reg3_0, reg3_1;
+    logic [31:0] mem0_0, mem0_1;
+    logic [31:0] a_pc_next,  b_pc_next;
+    logic        a_reg_we,   b_reg_we;
+    logic [4:0]  a_reg_addr, b_reg_addr;
+    logic [31:0] a_reg_data, b_reg_data;
+    logic        a_mem_we,   b_mem_we;
+    logic [31:0] a_mem_addr, b_mem_addr;
+    logic [31:0] a_mem_data, b_mem_data;
+    logic        mismatch_now;
+    logic        mismatch_latched;
+    logic [6:0]  mismatch_field;
+    logic        stall_a, stall_b, stall_any, stall_latched;
 
     // ------------------------------------------------------------------ //
     //  DUT
@@ -108,18 +108,18 @@ module tb_fault_campaign;
     // ------------------------------------------------------------------ //
     //  Free-running cycle counter (resets with the DUT)
     // ------------------------------------------------------------------ //
-    integer cycle_count;
-    always @(posedge clk)
+    int cycle_count;
+    always_ff @(posedge clk)
         if (reset) cycle_count <= 0;
         else        cycle_count <= cycle_count + 1;
 
     // ------------------------------------------------------------------ //
     //  Result storage (6 tests)
     // ------------------------------------------------------------------ //
-    integer inj_cyc [0:5];
-    integer det_cyc [0:5];
-    integer lat     [0:5];
-    integer det_ok  [0:5];   // 1 = fault detected, 0 = not detected
+    int inj_cyc [6];
+    int det_cyc [6];
+    int lat     [6];
+    int det_ok  [6];   // 1 = fault detected, 0 = not detected
 
     // ------------------------------------------------------------------ //
     //  Reset + latch-clear helper
@@ -147,14 +147,9 @@ module tb_fault_campaign;
     //  Detection poll: call after forcing a fault.
     //  Samples mismatch_now one tick after each posedge.
     //  Writes det_ok[t], det_cyc[t], lat[t].
-    //  Also releases any force you pass as the `release_target` string —
-    //  but Verilog tasks cannot accept hierarchical names as parameters,
-    //  so we release outside this task.
     // ------------------------------------------------------------------ //
-    task poll_detection;
-        input integer t;           // test index
-        input integer inj;         // injection cycle number
-        integer wc;
+    task poll_detection(input int t, input int inj);
+        int wc;
         begin
             det_ok[t]  = 0;
             det_cyc[t] = -1;
@@ -166,7 +161,7 @@ module tb_fault_campaign;
                     det_ok[t]  = 1;
                     det_cyc[t] = cycle_count;
                 end
-                wc = wc + 1;
+                wc++;
             end
             lat[t] = det_ok[t] ? (det_cyc[t] - inj) : -1;
         end
@@ -254,14 +249,14 @@ module tb_fault_campaign;
         lat[5]     = -1;
         det_ok[5]  = 0;
         begin : baseline_check
-            integer wc;
+            int wc;
             wc = 0;
             while (wc < MAX_WAIT) begin
                 @(posedge clk);
                 #1;
                 if (mismatch_now || mismatch_latched)
                     det_ok[5] = 1;   // spurious — should NOT happen
-                wc = wc + 1;
+                wc++;
             end
         end
 
@@ -298,13 +293,13 @@ module tb_fault_campaign;
         $display("----+--------------------------------+---------+---------+--------");
 
         begin : summary
-            integer n_inj, n_det, max_lat, cov, i;
+            int n_inj, n_det, max_lat, cov;
             n_inj   = 5;
             n_det   = 0;
             max_lat = 0;
-            for (i = 0; i < 5; i = i + 1) begin
+            for (int i = 0; i < 5; i++) begin
                 if (det_ok[i]) begin
-                    n_det = n_det + 1;
+                    n_det++;
                     if (lat[i] > max_lat) max_lat = lat[i];
                 end
             end

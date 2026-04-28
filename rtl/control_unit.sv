@@ -1,20 +1,21 @@
-// control_unit.v
+// control_unit.sv
 module control_unit (
-    input  wire [5:0] opcode,
-    input  wire [5:0] funct,
-    output reg        reg_write,
-    output reg        reg_dst,        // 1: rd, 0: rt
-    output reg        alu_src_imm,    // 1: immediate, 0: rt
-    output reg        imm_unsigned,   // 1: zero extend, 0: sign extend
-    output reg        mem_to_reg,     // 1: data memory, 0: ALU result
-    output reg        mem_read,
-    output reg        mem_write,
-    output reg        branch_eq,
-    output reg        branch_ne,
-    output reg        jump,
-    output reg [3:0]  alu_ctrl
+    input  logic [5:0] opcode,
+    input  logic [5:0] funct,
+    output logic       reg_write,
+    output logic       reg_dst,        // 1: rd, 0: rt
+    output logic       alu_src_imm,    // 1: immediate, 0: rt
+    output logic       imm_unsigned,   // 1: zero extend, 0: sign extend
+    output logic       mem_to_reg,     // 1: data memory, 0: ALU result
+    output logic       mem_read,
+    output logic       mem_write,
+    output logic       branch_eq,
+    output logic       branch_ne,
+    output logic       jump,
+    output logic [3:0] alu_ctrl
 );
-    always @* begin
+
+    always_comb begin
         // default values
         reg_write    = 1'b0;
         reg_dst      = 1'b0;
@@ -113,4 +114,3 @@ module control_unit (
     end
 
 endmodule
-

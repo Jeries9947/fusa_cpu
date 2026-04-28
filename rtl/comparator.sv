@@ -1,4 +1,4 @@
-// comparator.v
+// comparator.sv
 // Extended Commit Bus Comparator for the lockstep system.
 //
 // Checks seven architectural signals every clock cycle:
@@ -26,42 +26,45 @@
 //   [6] mem_data
 
 module comparator (
-    input  wire        clk,
-    input  wire        reset,
-    input  wire        clear,          // synchronous clear of mismatch_latched
+    input  logic        clk,
+    input  logic        reset,
+    input  logic        clear,          // synchronous clear of mismatch_latched
 
     // Core A commit bus
-    input  wire [31:0] a_pc_next,
-    input  wire        a_reg_we,
-    input  wire [4:0]  a_reg_addr,
-    input  wire [31:0] a_reg_data,
-    input  wire        a_mem_we,
-    input  wire [31:0] a_mem_addr,
-    input  wire [31:0] a_mem_data,
+    input  logic [31:0] a_pc_next,
+    input  logic        a_reg_we,
+    input  logic [4:0]  a_reg_addr,
+    input  logic [31:0] a_reg_data,
+    input  logic        a_mem_we,
+    input  logic [31:0] a_mem_addr,
+    input  logic [31:0] a_mem_data,
 
     // Core B commit bus
-    input  wire [31:0] b_pc_next,
-    input  wire        b_reg_we,
-    input  wire [4:0]  b_reg_addr,
-    input  wire [31:0] b_reg_data,
-    input  wire        b_mem_we,
-    input  wire [31:0] b_mem_addr,
-    input  wire [31:0] b_mem_data,
+    input  logic [31:0] b_pc_next,
+    input  logic        b_reg_we,
+    input  logic [4:0]  b_reg_addr,
+    input  logic [31:0] b_reg_data,
+    input  logic        b_mem_we,
+    input  logic [31:0] b_mem_addr,
+    input  logic [31:0] b_mem_data,
 
     // Outputs
-    output wire        mismatch_now,
-    output reg         mismatch_latched,
-    output wire [6:0]  mismatch_field    // one-hot per diverging field
+    output logic        mismatch_now,
+    output logic        mismatch_latched,
+    output logic [6:0]  mismatch_field    // one-hot per diverging field
 );
 
     // Per-field mismatch flags (combinational)
-    wire f_pc_next  = (a_pc_next  != b_pc_next);
-    wire f_reg_we   = (a_reg_we   != b_reg_we);
-    wire f_reg_addr = (a_reg_addr != b_reg_addr);
-    wire f_reg_data = (a_reg_data != b_reg_data);
-    wire f_mem_we   = (a_mem_we   != b_mem_we);
-    wire f_mem_addr = (a_mem_addr != b_mem_addr);
-    wire f_mem_data = (a_mem_data != b_mem_data);
+    logic f_pc_next, f_reg_we, f_reg_addr, f_reg_data,
+          f_mem_we,  f_mem_addr, f_mem_data;
+
+    assign f_pc_next  = (a_pc_next  != b_pc_next);
+    assign f_reg_we   = (a_reg_we   != b_reg_we);
+    assign f_reg_addr = (a_reg_addr != b_reg_addr);
+    assign f_reg_data = (a_reg_data != b_reg_data);
+    assign f_mem_we   = (a_mem_we   != b_mem_we);
+    assign f_mem_addr = (a_mem_addr != b_mem_addr);
+    assign f_mem_data = (a_mem_data != b_mem_data);
 
     assign mismatch_field = {f_mem_data, f_mem_addr, f_mem_we,
                              f_reg_data, f_reg_addr, f_reg_we, f_pc_next};
@@ -69,7 +72,7 @@ module comparator (
     assign mismatch_now = |mismatch_field;
 
     // Sticky latch — cleared by async reset or synchronous clear pulse
-    always @(posedge clk or posedge reset) begin
+    always_ff @(posedge clk or posedge reset) begin
         if (reset)
             mismatch_latched <= 1'b0;
         else if (clear)

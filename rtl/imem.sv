@@ -1,9 +1,9 @@
-// imem.v
+// imem.sv
 module imem (
-    input  wire [31:0] addr,
-    output wire [31:0] instr
+    input  logic [31:0] addr,
+    output logic [31:0] instr
 );
-    reg [31:0] mem [0:255];
+    logic [31:0] mem [0:255];
 
     initial begin
         mem[0] = 32'h20010005; // addi $1, $0, 5
@@ -15,5 +15,5 @@ module imem (
     end
 
     assign instr = mem[addr[9:2]]; // word addressed
-    
+
 endmodule
