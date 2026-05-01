@@ -12,7 +12,7 @@
 //
 // All inputs are combinational (driven by the cores' commit buses).
 // mismatch_now  : asserted immediately in the cycle a divergence is seen.
-// mismatch_latched : sticky; cleared only by reset.
+// mismatch_latched : The mismatch flag is sticky and can be cleared either by reset or by a dedicated synchronous clear signal after each fault experiment.
 // mismatch_field   : one-hot encoded, identifies which field(s) diverged
 //                    (useful for fault diagnosis in simulation).
 //

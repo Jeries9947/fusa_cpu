@@ -43,6 +43,6 @@ fault_campaign: $(CPU_RTL) $(LOCKSTEP_RTL) $(TB_DIR)/tb_fault_campaign.sv
 	$(VVP) $(CAMPAIGN_OUT)
 
 clean:
-	rm -f *.out *.vcd
+	rm -f *.out *.vcd fault_results.csv
 
 .PHONY: all cpu lockstep fault_campaign clean

@@ -11,7 +11,7 @@
 //   stall_a        : Core A has been stuck for TIMEOUT cycles (combinational)
 //   stall_b        : Core B has been stuck for TIMEOUT cycles (combinational)
 //   stall_any      : OR of stall_a and stall_b
-//   stall_latched  : sticky flag — set on first stall, cleared only by reset
+//   stall_latched  : sticky flag — set on first stall, cleared by reset or synchronous clear
 
 module watchdog #(
     parameter int TIMEOUT = 16   // cycles before a non-advancing PC is a fault
