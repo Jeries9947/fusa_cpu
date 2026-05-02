@@ -19,10 +19,18 @@ LOCKSTEP_RTL = $(RTL_DIR)/fault_inject.sv \
                $(RTL_DIR)/watchdog.sv \
                $(RTL_DIR)/lockstep_top.sv
 
+INTERNAL_FAULT_RTL = $(RTL_DIR)/fault_inject.sv \
+                     $(RTL_DIR)/comparator.sv \
+                     $(RTL_DIR)/watchdog.sv \
+                     $(RTL_DIR)/cpu_single_cycle_faultable.sv \
+                     $(RTL_DIR)/lockstep_top_internal_fault.sv
+
 # ===== Outputs =====
-CPU_OUT      = cpu_sim.out
-LOCKSTEP_OUT = lockstep_sim.out
-CAMPAIGN_OUT = fault_campaign_sim.out
+CPU_OUT               = cpu_sim.out
+LOCKSTEP_OUT          = lockstep_sim.out
+CAMPAIGN_OUT          = fault_campaign_sim.out
+INTERNAL_CAMPAIGN_OUT = internal_fault_campaign_sim.out
+WATCHDOG_CAMPAIGN_OUT = watchdog_campaign_sim.out
 
 # Default
 all: cpu lockstep
@@ -37,12 +45,22 @@ lockstep: $(CPU_RTL) $(LOCKSTEP_RTL) $(TB_DIR)/tb_lockstep.sv
 	$(IVERILOG) -g2012 -o $(LOCKSTEP_OUT) $(CPU_RTL) $(LOCKSTEP_RTL) $(TB_DIR)/tb_lockstep.sv
 	$(VVP) $(LOCKSTEP_OUT)
 
-# Fault injection campaign testbench
+# Campaign 1: Commit-bus RTL fault injection campaign
 fault_campaign: $(CPU_RTL) $(LOCKSTEP_RTL) $(TB_DIR)/tb_fault_campaign.sv
 	$(IVERILOG) -g2012 -o $(CAMPAIGN_OUT) $(CPU_RTL) $(LOCKSTEP_RTL) $(TB_DIR)/tb_fault_campaign.sv
 	$(VVP) $(CAMPAIGN_OUT)
 
-clean:
-	rm -f *.out *.vcd fault_results.csv
+# Campaign 2: Internal checker-core fault injection campaign
+internal_fault_campaign: $(CPU_RTL) $(INTERNAL_FAULT_RTL) $(TB_DIR)/tb_internal_fault_campaign.sv
+	$(IVERILOG) -g2012 -o $(INTERNAL_CAMPAIGN_OUT) $(CPU_RTL) $(INTERNAL_FAULT_RTL) $(TB_DIR)/tb_internal_fault_campaign.sv
+	$(VVP) $(INTERNAL_CAMPAIGN_OUT)
 
-.PHONY: all cpu lockstep fault_campaign clean
+# Campaign 3: Watchdog / hang detection campaign
+watchdog_campaign: $(CPU_RTL) $(INTERNAL_FAULT_RTL) $(TB_DIR)/tb_watchdog_campaign.sv
+	$(IVERILOG) -g2012 -o $(WATCHDOG_CAMPAIGN_OUT) $(CPU_RTL) $(INTERNAL_FAULT_RTL) $(TB_DIR)/tb_watchdog_campaign.sv
+	$(VVP) $(WATCHDOG_CAMPAIGN_OUT)
+
+clean:
+	rm -f *.out *.vcd fault_results.csv internal_fault_results.csv
+
+.PHONY: all cpu lockstep fault_campaign internal_fault_campaign watchdog_campaign clean
