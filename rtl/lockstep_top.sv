@@ -3,11 +3,6 @@
 // and connects their commit buses through fault injection to the extended
 // comparator and watchdog.
 
-// lockstep_top.sv
-// Lockstep wrapper: instantiates two identical CPU cores (Master + Shadow)
-// and connects their commit buses through fault injection to the extended
-// comparator and watchdog.
-
 module lockstep_top (
     input  logic        clk,
     input  logic        reset,
