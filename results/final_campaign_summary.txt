@@ -1,0 +1,29 @@
+Final Fault-Injection Campaign Summary
+
+1. Commit-Bus Fault Injection Campaign
+Total faults: 105
+Detected faults: 105
+Missed faults: 0
+Coverage: 100.00%
+Average latency: 0.00 cycles
+Max latency: 0 cycles
+
+2. Internal Checker-Core Fault Injection Campaign
+Total faults: 225
+Detected faults: 214
+Not observed faults: 11
+Raw observed coverage: 95.11%
+Average latency: 0.02 cycles
+Max latency: 3 cycles
+
+3. Watchdog PC-Hold Campaign
+Fault type: Core B PC_HOLD
+Detection result: Detected
+Inject cycle: 6
+Detect cycle: 11
+Detection latency: 5 cycles
+
+Conclusion:
+The system meets the formal project targets:
+- Fault detection coverage >= 95%
+- Detection latency <= 5 cycles

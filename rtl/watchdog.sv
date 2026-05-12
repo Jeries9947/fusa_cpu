@@ -14,7 +14,7 @@
 //   stall_latched  : sticky flag — set on first stall, cleared by reset or synchronous clear
 
 module watchdog #(
-    parameter int TIMEOUT = 16   // cycles before a non-advancing PC is a fault
+    parameter int TIMEOUT = 4   // cycles before a non-advancing PC is a fault
 ) (
     input  logic        clk,
     input  logic        reset,
