@@ -6,26 +6,23 @@
 *.fst
 *.log
 *.bak
+
+# Editor / OS files
 *.swp
 *.swo
+.DS_Store
 
-# Verilator and other build dirs
+# Build directories
 obj_dir/
-simv*
 build/
 out/
 waves/
 *.dSYM/
 
-# macOS files
-.DS_Store
-
 # Local temp artifacts
 .tmp/
-*.vcd
-*.vvp
-*.out
 
 # Compiled simulation binaries
 cpu_tb
 lockstep_tb
+simv*
