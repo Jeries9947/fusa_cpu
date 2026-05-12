@@ -1,0 +1,23 @@
+read_verilog -sv rtl/alu.sv
+read_verilog -sv rtl/control_unit.sv
+read_verilog -sv rtl/cpu_single_cycle.sv
+read_verilog -sv rtl/dmem.sv
+read_verilog -sv rtl/imem.sv
+read_verilog -sv rtl/register_file.sv
+read_verilog -sv rtl/sign_extend.sv
+read_verilog -sv rtl/fault_inject.sv
+read_verilog -sv rtl/comparator.sv
+read_verilog -sv rtl/watchdog.sv
+read_verilog -sv rtl/lockstep_top.sv
+
+hierarchy -top lockstep_top
+proc
+opt
+fsm
+opt
+memory
+opt
+techmap
+opt
+stat
+
