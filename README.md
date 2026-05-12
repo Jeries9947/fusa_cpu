@@ -8,12 +8,12 @@ The project evaluates whether a compact lockstep architecture can detect injecte
 
 ## Formal Targets
 
-| Metric | Required Target | Measured Result | Status |
-|---|---:|---:|:---:|
-| Commit-bus fault detection coverage | >= 95% | 100.00% | PASS |
-| Internal fault detection coverage | >= 95% | 95.11% | PASS |
-| Detection latency | <= 5 cycles | max 3 cycles internal, 5 cycles watchdog | PASS |
-| Safety-logic area overhead | < 5% | evaluated by Yosys synthesis flow | In progress |
+| Metric                              |Required Target|Measured Result                         | Status      |
+|------------------------------------------------------------------------------------------------------------|
+| Commit-bus fault detection coverage | >= 95%      | 100.00%                                  | PASS        |
+| Internal fault detection coverage   | >= 95%      | 95.11%                                   | PASS        |
+| Detection latency                   | <= 5 cycles | max 3 cycles internal, 5 cycles watchdog | PASS        |
+| Safety-logic area overhead          | < 5%        | evaluated by Yosys synthesis flow        | In progress |
 
 ## Architecture
 

@@ -43,7 +43,7 @@ clk, reset -----> |  +-------------+      +-------------+    |
 
 ## Compared Commit-Bus Signals
 
-The extended comparator checks seven architectural signals:
+The comparator checks seven architectural signals:
 
 1. next PC
 2. register write enable
@@ -78,11 +78,11 @@ These signals represent the architectural effects of each instruction. A diverge
 
 ## Final Experimental Results
 
-| Campaign | Total Faults | Detected | Coverage | Max Latency |
-|---|---:|---:|---:|---:|
-| Commit-bus fault injection | 105 | 105 | 100.00% | 0 cycles |
-| Internal checker-core fault injection | 225 | 214 | 95.11% | 3 cycles |
-| Watchdog PC-hold fault | 1 | 1 | 100.00% | 5 cycles |
+| Campaign                              | Total Faults | Detected | Coverage | Max Latency |
+|------------------------------------------------------------------------------------------|
+| Commit-bus fault injection            | 105          | 105      | 100.00%  | 0 cycles    |
+| Internal checker-core fault injection | 225 | 214    | 95.11%   | 3 cycles |             |
+| Watchdog PC-hold fault                | 1            | 1        | 100.00%  | 5 cycles    |
 
 The project meets the formal coverage and latency targets.
 
